@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project name="iacs-cmms" basedir=".." default="build">
+	<!--ANT 1.7 is required                                        -->
+
+	<property name="src.dir" value="src"/>
+	<property name="resources.dir" value="resources"/>
+	<property name="build.dir" value="build"/>
+	<property name="lib.dir" value="lib"/>
+	<property name="dist.dir" value="${basedir}/dist"/>
+	<property name="webroot.dir" value="webapp"/>
+	<property name="war.file" value="iacs-cmms.war"/>
+	<property name="ear.stage.dir" value="${build.dir}/earstage"/>
+	<property name="ear.file" value="iacs-cmms.ear"/>
+	<property name="deployment.name" value="iacs-cmms"/>
+    <property name="deployment.plan" value="iacs-cmms_plan.dat"/>
+	<property file="${basedir}/buildscripts/common.properties" />
+
+	<property name="war.stage.dir" value="warstage"/>
+<!--	<property name="jarfile" value="cmms-iacs-1.0.jar"/>  -->
+
+	<!-- Define the Project Classpath -->
+	<path id="build.classpath">
+		<fileset dir="${lib.dir}" includes="**/*.jar" />
+	</path>
+
+	<!-- Build -->
+	<target name="build" description="Build application including schema generation">
+		<antcall target="delete_build" />
+		<antcall target="compile" />
+		<antcall target="war" />
+		<antcall target="ear" />
+		<!-- <antcall target="create_jar" /> -->
+		<!--<antcall target="generate_schema" />-->
+	</target>
+
+	<!-- Build & redeploy -->
+	<target name="build_redeploy" description="Build application and redeploy">
+		<antcall target="build" />
+		<antcall target="redeploy" />
+	</target>
+	
+	<!-- Delete everything from build and dist dirs -->
+	<target name="delete_build">
+		<delete failonerror="false">
+			<fileset dir="${dist.dir}">
+				<include name="**/*" />
+			</fileset>
+			<fileset dir="${build.dir}">
+				<include name="**/*" />
+			</fileset>
+			<fileset dir="${war.stage.dir}">
+                <include name="**/*" />
+			</fileset>			
+		</delete>
+		<delete dir="${war.stage.dir}/WEB-INF" />
+	</target>
+
+	<!-- Deploy the application to OC4J -->
+	<target name="deploy" description="Deploy app into OC4J">
+		<ant antfile="oc4j-admin-build.xml" dir="${common.buildscript.dir}" target="deploy-app">
+			<property name="oc4j.admin.deploy.file" value="${dist.dir}/${ear.file}" />
+			<property name="oc4j.admin.deploy.name" value="${deployment.name}" />
+			<property name="oc4j.admin.deploy.plan" value="${basedir}/${deployment.plan}" />
+		</ant>
+	</target>
+
+<!--
+	<target name="jar_and_copy" depends="create_jar,copy_to_166">
+	</target>
+-->	
+
+<!--
+	<target name="echo_properties">
+		<echo>source dir="${src.dir}"</echo>
+		<echo>build dir="${build.dir}"</echo>
+		<echo>jar file name="${jarfile}"</echo>
+	</target>
+-->
+	
+	<target name="clean">
+		<echo>=== CLEAN ===</echo>
+		<delete failonerror="false">
+			<fileset dir="${build.dir}" includes="**/*"/>
+		</delete>
+		<delete dir="${build.dir}" />
+	</target>
+
+	<target name="compile" depends="clean">
+		<echo>=== COMPILE ===</echo>
+		<mkdir dir="${build.dir}" />
+		<javac srcdir="${src.dir}"
+		         destdir="${build.dir}">
+			<compilerarg value="-g"/>
+			<!-- debug info -->
+			<classpath refid="build.classpath"/>
+		</javac>
+	</target>
+
+<!--
+	<target name="create_jar">
+		<echo>=== CREATE_JAR ===</echo>
+		<jar destfile="${jarfile}">
+			<fileset dir="${build.dir}"/>
+			<fileset dir="${src.dir}"/>
+		</jar>
+	</target>
+-->
+	
+	<!-- password="${user.password}"  -->
+	<target name="copy_to_166">
+		<echo>=== COPY_TO_166 ===</echo>
+        <input 
+            message="Enter ${user.name} password for vcmr-166"
+            addproperty="vcmr166.pw"
+        />       
+		<scp file="${dist.dir}/${war.file}" 
+			todir="${user.name}@vcmr-166.server.rpi.edu:/home/${user.name}/sciquest"
+			password="${vcmr166.pw}"
+			trust="true"/>
+	</target>
+
+	<!-- <handler classname="org.apache.tools.ant.input.SecureInputHandler"/> -->
+    <target name="copy_to_146">
+        <echo>=== COPY_TO_146 ===</echo>
+    	<echo message="ant.version = ${ant.version}"/>
+    	<echo message="jre.version = ${java.runtime.version}" />
+    	<input 
+    		message="Enter ${user.name} password for vcmr-146"
+    		addproperty="vcmr146.pw"
+    	>  		
+	   </input>    	
+    	<scp file="${dist.dir}/${war.file}" 
+            todir="${user.name}@vcmr-146.server.rpi.edu:/home/${user.name}/sciquest"
+            password="${vcmr146.pw}"	
+            trust="true"/>
+    </target>
+
+	<!-- Build the .war file -->
+	<target name="war">
+		<echo>Building War .....</echo>
+
+        <!-- Make the WEB-INF directory -->
+        <mkdir dir="${war.stage.dir}/WEB-INF" />
+		
+		<!-- Make the WEB-INF/classes directory -->
+		<mkdir dir="${war.stage.dir}/WEB-INF/classes" />
+		<echo>Created WEB_INF/classes dir</echo>
+
+        <!-- Copy compiled classes to WEB-INF/classes dir -->
+		<copy todir="${war.stage.dir}/WEB-INF/classes">
+			<fileset dir="${build.dir}">
+				<include name="*/**" />
+			</fileset>
+		</copy>
+		<echo>Copied classes to war stage</echo>
+
+        <!-- Make the WEB-INF/src directory -->
+        <mkdir dir="${war.stage.dir}/WEB-INF/src" />
+        <echo>Created WEB_INF/src dir</echo>
+		
+        <!-- Copy source code to WEB-INF/src dir -->
+        <copy todir="${war.stage.dir}/WEB-INF/src">
+            <fileset dir="${src.dir}">
+                <include name="*/**" />
+            </fileset>
+        </copy>
+        <echo>Copied source code to war stage</echo>
+
+       	<!-- Make the WEB-INF/lib directory -->
+		<mkdir dir="${war.stage.dir}/WEB-INF/lib" />
+		<echo>Created WEB_INF/lib</echo>
+
+		<!-- Copy project libs -->
+		<copy todir="${war.stage.dir}/WEB-INF/lib">
+			<fileset dir="${lib.dir}">
+				<include name="*.jar" />
+				<exclude name="servlet.jar"/>
+			</fileset>
+		</copy>
+		<echo>Copied project libs</echo>
+
+        <!-- Make the WEB-INF/resources directory -->
+        <mkdir dir="${war.stage.dir}/WEB-INF/resources" />
+        <echo>Created WEB_INF/resources</echo>
+
+        <!-- Copy project resources -->
+        <copy todir="${war.stage.dir}/WEB-INF/resources">
+            <fileset dir="${resources.dir}">
+                <include name="*" />
+            </fileset>
+        </copy>
+        <echo>Copied project resources</echo>
+		
+		<!-- Create META-INF dir -->
+		<mkdir dir="${war.stage.dir}/WEB-INF/classes/META-INF" />
+		<echo>Created META-INF dir</echo>
+
+		<!-- generate the war file using the contents of the staging area and the web.xml file -->
+		<war basedir="${war.stage.dir}" destfile="${dist.dir}/${war.file}" webxml="${webroot.dir}/WEB-INF/web.xml">
+			<fileset dir="${webroot.dir}/html"/>
+		</war>
+
+		<echo>Created War...............</echo>
+
+	</target>
+
+	<!-- Build the .ear file -->
+	<target name="ear">
+		<echo>Building Ear .....</echo>
+		<delete dir="${ear.stage.dir}" />
+		<mkdir dir="${ear.stage.dir}" />
+
+		<!-- Copy the war file to the .ear staging directory-->
+		<copy file="${dist.dir}/${war.file}" todir="${ear.stage.dir}" />
+
+		<!-- Build the .ear -->
+		<ear destfile="${dist.dir}/${ear.file}" appxml="${basedir}/application.xml">
+			<fileset dir="${ear.stage.dir}" includes="*.jar,*.war" />
+		</ear>
+
+
+	</target>
+
+	<!-- Redeploy the application, application must have already been deployed using the deploy target -->
+	<target name="redeploy" description="Redeploy the app to OC4J">
+		<antcall target="undeploy">
+		</antcall>
+		<antcall target="deploy">
+		</antcall>
+	</target>
+
+	<!-- Undeploys the application from OC4J -->
+	<target name="undeploy" description="Undeploy the application from OC4J">
+		<ant antfile="oc4j-admin-build.xml" dir="${common.buildscript.dir}" target="undeploy-app">
+			<property name="oc4j.admin.deploy.name" value="${deployment.name}" />
+		</ant>
+	</target>
+</project>

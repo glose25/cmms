@@ -1,0 +1,78 @@
+<?xml version="1.0"?>
+<!--
+    =================================================================================
+        Contains targets to setup commands for executing system commands locally.
+        Can be imported into any ant scripts that need to execute local commands.
+    =================================================================================
+-->
+<project name="setup-exec-build" basedir=".">
+    <!--
+           ===================================================================
+             Setup for executing operating system commands locally
+           ===================================================================
+    -->
+    <target name="_setup-exec-cmd">
+        <!-- test for Windows familiy of operating systems -->
+        <condition property="_is.windows" value="true">
+            <os family="windows"/>
+        </condition>
+        <!-- test for Unix and Unix-like operating systems -->
+        <condition property="_is.unix" value="true">
+            <os family="unix"/>
+        </condition>
+        <!-- verify that the operating system detected is supported -->
+        <condition property="_not.supported" value="true">
+            <not>
+                <or>
+                    <isset property="_is.windows"/>
+                    <isset property="_is.unix"/>
+                </or>
+            </not>
+        </condition>
+        <fail message="Only Windows and Unix operating systems are supported." if="_not.supported"/>
+        <!-- setup for running commands on Windows -->
+        <condition property="_cmd.name" value="${_launcher.cmd}">
+            <and>
+                <isset property="_is.windows"/>
+                <isset property="_launcher.cmd"/>
+            </and>
+        </condition>
+        <condition property="_cmd.name" value="cmd.exe">
+            <isset property="_is.windows"/>
+        </condition>
+        <condition property="_cmd.args" value="">
+            <and>
+                <isset property="_is.windows"/>
+                <isset property="_launcher.cmd"/>
+            </and>
+        </condition>
+        <condition property="_cmd.args" value="/C">
+            <isset property="_is.windows"/>
+        </condition>
+        <condition property="_cmd.locn" value="">
+            <isset property="_is.windows"/>
+        </condition>
+        <condition property="_cmd.type" value=".bat">
+            <isset property="_is.windows"/>
+        </condition>
+        <condition property="_cmd.parm" value="%">
+            <isset property="_is.windows"/>
+        </condition>
+        <!-- setup for running commands on Unix -->
+        <condition property="_cmd.name" value="sh">
+            <isset property="_is.unix"/>
+        </condition>
+        <condition property="_cmd.args" value="-c">
+            <isset property="_is.unix"/>
+        </condition>
+        <condition property="_cmd.locn" value="./">
+            <isset property="_is.unix"/>
+        </condition>
+        <condition property="_cmd.type" value=".sh">
+            <isset property="_is.unix"/>
+        </condition>
+        <condition property="_cmd.parm" value="$">
+            <isset property="_is.unix"/>
+        </condition>
+    </target>
+</project>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE DocumentExportResponse SYSTEM "http://vcmr-166.server.rpi.edu:5555/app_docs/dtd/purchase_order/POExport.dtd">
+<DocumentExportResponse version="2.1">
+    <Header>
+        <MessageId />
+        <Timestamp />
+    </Header>
+    <Response>
+        <Status>
+            <StatusCode>200</StatusCode>
+            <StatusText>successful</StatusText>
+        </Status>
+    </Response>
+</DocumentExportResponse>

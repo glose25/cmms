@@ -1,0 +1,265 @@
+<?xml version="1.0"?>
+<project name="oc4j-admin-build" default="help" basedir=".">
+    <import file="setup-exec-build.xml"/>
+    <!--
+       ===================================================================
+         Set the properties related to the project
+       ===================================================================
+-->
+    <property name="default.oc4j.admin.host" value="localhost"/>
+    <property name="default.oc4j.admin.port" value="23791"/>
+    <property name="default.oc4j.admin.username" value="oc4jadmin"/>
+    <property name="default.oc4j.admin.password" value="odie"/>
+    <property file="common.properties" />
+
+    <!--
+       ===================================================================
+         Help (default target)
+       ===================================================================
+-->
+    <target name="help">
+        <echo message="You must specify one of the following targets:"/>
+        <echo message="  verify-oc4j - verify that an OC4J instance is running"/>
+        <echo message="  startup-oc4j - startup an OC4J instance (local instances only)"/>
+        <echo message="    property oc4j.admin.home is required"/>
+        <echo message="  shutdown-oc4j - shutdown an OC4J instance"/>
+        <echo message="  restart-oc4j - restart an OC4J instance"/>
+        <echo message="  deploy-app - deploy J2EE or standalone web application (EAR/WAR)"/>
+        <echo message="    property oc4j.admin.deploy.file is required"/>
+        <echo message="    property oc4j.admin.deploy.name is required"/>
+        <echo message="    property oc4j.admin.deploy.plan is required"/>
+        <echo message="  redeploy-app - redeploy an application"/>
+        <echo message="    property oc4j.admin.deploy.file is required"/>
+        <echo message="    property oc4j.admin.deploy.name is required"/>
+        <echo message="  undeploy-app - undeploy an application"/>
+        <echo message="    property oc4j.admin.deploy.name is required"/>
+        <echo message="  start-app - start an application"/>
+        <echo message="    property oc4j.admin.deploy.name is required"/>
+        <echo message="  stop-app - stop an application"/>
+        <echo message="    property oc4j.admin.deploy.name is required"/>
+        <echo message="  setup-jms-connectionfactory - create a JMS connectionFactory"/>
+        <echo message="    property oc4j.admin.deploy.jms.domainname is required"/>
+        <echo message="    property oc4j.admin.deploy.jms.connectionfactory.jndilocation is required"/>
+        <echo message="    property oc4j.admin.deploy.jms.connectionfactory.clientid is required"/>
+        <echo message="  setup-jms-destination - create a JMS destination"/>
+        <echo message="    property oc4j.admin.deploy.jms.domainname is required"/>
+        <echo message="    property oc4j.admin.deploy.jms.destination.namee is required"/>
+        <echo message="    property oc4j.admin.deploy.jms.destination.jndilocation is required"/>
+        <echo message="  remove-jms-connectionfactory - removes a JMS connectionFactory"/>
+        <echo message="    property oc4j.admin.deploy.jms.connectionfactory.jndilocation is required"/>
+        <echo message="  remove-jms-destination - removes a JMS destination"/>
+        <echo message="    property oc4j.admin.deploy.jms.destination.name is required"/>
+        <echo message="------------"/>
+        <echo message="The following properties may be set to avoid defaulting:"/>
+        <echo message="  oc4j.admin.host (defaults to ${default.oc4j.admin.host})"/>
+        <echo message="  oc4j.admin.port (defaults to ${default.oc4j.admin.port})"/>
+        <echo message="  oc4j.admin.username (defaults to ${default.oc4j.admin.username})"/>
+        <echo message="  oc4j.admin.password (defaults to ${default.oc4j.admin.password})"/>
+    </target>
+    <!--
+       ===================================================================
+         Verify that an OC4J instance is running
+       ===================================================================
+-->
+    <target name="verify-oc4j">
+        <antcall target="_run-oc4j-admin-client">
+            <param name="_oc4j.admin.action" value="-validateURI"/>
+        </antcall>
+    </target>
+    <!--
+       ===================================================================
+         Startup an OC4J instance (local instances only)
+       ===================================================================
+-->
+    <target name="startup-oc4j">
+        <antcall target="_run-oc4j-admin-script">
+            <param name="_oc4j.admin.action" value="oc4j-startup"/>
+        </antcall>
+    </target>
+    <!--
+       ===================================================================
+         Shutdown an OC4J instance
+       ===================================================================
+-->
+    <target name="shutdown-oc4j">
+        <antcall target="_run-oc4j-admin-client">
+            <param name="_oc4j.admin.action" value="-shutdown"/>
+            <param name="_oc4j.admin.failonerror" value="false"/>
+        </antcall>
+    </target>
+    <!--
+       ===================================================================
+         Restart an OC4J instance
+       ===================================================================
+-->
+    <target name="restart-oc4j">
+        <antcall target="_run-oc4j-admin-client">
+            <param name="_oc4j.admin.action" value="-restart"/>
+        </antcall>
+    </target>
+    <!--
+       ===================================================================
+         Deploy a J2EE or standalone web application (EAR/WAR)
+       ===================================================================
+-->
+    <target name="deploy-app">
+        <fail message="Property oc4j.admin.deploy.file must be set to the path and file name of the EAR/WAR file to deploy." unless="oc4j.admin.deploy.file"/>
+        <fail message="Property oc4j.admin.deploy.name must be set to the user-defined application deployment name, used to identify the application within OC4J." unless="oc4j.admin.deploy.name"/>
+        <fail message="Property oc4j.admin.deploy.plan must be set to the path and file name for a deployment plan to apply to the application, which would have been saved during a previous deployment as an XML file." unless="oc4j.admin.deploy.plan"/>
+        <antcall target="_run-oc4j-admin-client">
+            <param name="_oc4j.admin.action" value='-deploy -file "${oc4j.admin.deploy.file}" -deploymentName "${oc4j.admin.deploy.name}" -bindAllWebApps -deploymentPlan "${oc4j.admin.deploy.plan}"'/>
+        </antcall>
+    </target>
+    <!--
+       ===================================================================
+         Redeploy an application
+       ===================================================================
+-->
+    <target name="redeploy-app">
+        <fail message="Property oc4j.admin.deploy.file must be set to the path and file name of the EAR/WAR file to deploy." unless="oc4j.admin.deploy.file"/>
+        <fail message="Property oc4j.admin.deploy.name must be set to the user-defined application deployment name, used to identify the application within OC4J." unless="oc4j.admin.deploy.name"/>
+        <antcall target="_run-oc4j-admin-client">
+            <param name="_oc4j.admin.action" value='-redeploy -file "${oc4j.admin.deploy.file}" -deploymentName "${oc4j.admin.deploy.name}" -keepSettings'/>
+            <param name="_oc4j.admin.failonerror" value="false"/>
+        </antcall>
+    </target>
+    <!--
+       ===================================================================
+         Undeploy an application
+       ===================================================================
+-->
+    <target name="undeploy-app">
+        <fail message="Property oc4j.admin.deploy.name must be set to the user-defined application deployment name, used to identify the application within OC4J." unless="oc4j.admin.deploy.name"/>
+        <antcall target="_run-oc4j-admin-client">
+            <param name="_oc4j.admin.action" value='-undeploy "${oc4j.admin.deploy.name}"'/>
+            <param name="_oc4j.admin.failonerror" value="false"/>
+        </antcall>
+    </target>
+    <!--
+       ===================================================================
+         Start an application
+       ===================================================================
+-->
+    <target name="start-app">
+        <fail message="Property oc4j.admin.deploy.name must be set to the user-defined application deployment name, used to identify the application within OC4J." unless="oc4j.admin.deploy.name"/>
+        <antcall target="_run-oc4j-admin-client">
+            <param name="_oc4j.admin.action" value="-start ${oc4j.admin.deploy.name}"/>
+        </antcall>
+    </target>
+    <!--
+       ===================================================================
+         Stop an application
+       ===================================================================
+-->
+    <target name="stop-app">
+        <fail message="Property oc4j.admin.deploy.name must be set to the user-defined application deployment name, used to identify the application within OC4J." unless="oc4j.admin.deploy.name"/>
+        <antcall target="_run-oc4j-admin-client">
+            <param name="_oc4j.admin.action" value="-stop ${oc4j.admin.deploy.name}"/>
+            <param name="_oc4j.admin.failonerror" value="false"/>
+        </antcall>
+    </target>
+    <!--
+       ===================================================================
+         Perform the requested action using the OC4J admin client
+       ===================================================================
+-->
+    <target name="_run-oc4j-admin-client" depends="_apply-oc4j-admin-defaults">
+        <echo message="Processing '${_oc4j.admin.action}'"/>
+        <java jar="${oc4j.home}/j2ee/home/admin_client.jar" fork="true" failonerror="${_oc4j.admin.failonerror}">
+            <arg value="deployer:oc4j:${oc4j.admin.host}:${oc4j.admin.port}"/>
+            <arg value="${oc4j.admin.username}"/>
+            <arg value="${oc4j.admin.password}"/>
+            <arg line="${_oc4j.admin.action}"/>
+        </java>
+    </target>
+    <!--
+       ===================================================================
+         Apply OC4J admin defaults
+       ===================================================================
+-->
+    <target name="_apply-oc4j-admin-defaults">
+        <property name="oc4j.admin.host" value="${default.oc4j.admin.host}"/>
+        <property name="oc4j.admin.port" value="${default.oc4j.admin.port}"/>
+        <property name="oc4j.admin.username" value="${default.oc4j.admin.username}"/>
+        <property name="oc4j.admin.password" value="${default.oc4j.admin.password}"/>
+        <property name="_oc4j.admin.failonerror" value="true"/>
+    </target>
+    <!--
+       ===================================================================
+         Perform the requested action using an os-specific script
+       ===================================================================
+-->
+    <target name="_run-oc4j-admin-script" depends="_setup-exec-cmd,_mark-executable-files">
+        <fail message="Property oc4j.admin.home must be set to location of OC4J home directory." unless="oc4j.admin.home"/>
+        <echo message="Executing '${_cmd.locn}${_oc4j.admin.action}${_cmd.type}'"/>
+        <exec dir="${basedir}" executable="${_cmd.name}" spawn="true">
+            <arg value="${_cmd.args}"/>
+            <arg value="${_cmd.locn}${_oc4j.admin.action}${_cmd.type}"/>
+            <env key="ORACLE_HOME" value="${oc4j.admin.home}"/>
+        </exec>
+    </target>
+
+    <!--
+       ===================================================================
+         Mark executable files on Unix
+       ===================================================================
+-->
+    <target name="_mark-executable-files" depends="_setup-exec-cmd,_mark-executable-files-unix"/>
+    <target name="_mark-executable-files-unix" if="_is.unix">
+        <!-- mark all files ending in '.sh' as executable on Unix -->
+        <chmod perm="+x">
+            <fileset dir="${basedir}">
+                <include name="**/*.sh"/>
+            </fileset>
+        </chmod>
+    </target>
+
+
+    <!--
+       =========================================================================
+         creates a jms connection factory on the mentioned domain[Queue/Topic]
+       ========================================================================
+-->
+    <target name="setup-jms-connectionfactory">
+        <antcall target="_run-oc4j-admin-client">
+            <param name="_oc4j.admin.action" value="-addJMSConnectionFactory -domain ${oc4j.admin.deploy.jms.domainname} -jndilocation ${oc4j.admin.deploy.jms.connectionfactory.jndilocation} -clientID ${oc4j.admin.deploy.jms.connectionfactory.clientid}"/>
+            <param name="_oc4j.admin.failonerror" value="false"/>
+        </antcall>
+    </target>
+
+    <!--
+       ===================================================================
+         creates a jms destination on the mentioned domain[Queue/Topic]
+       ===================================================================
+-->
+    <target name="setup-jms-destination">
+        <antcall target="_run-oc4j-admin-client">
+            <param name="_oc4j.admin.action" value="-addDestination -domain ${oc4j.admin.deploy.jms.domainname} -name ${oc4j.admin.deploy.jms.destination.name} -jndilocation ${oc4j.admin.deploy.jms.destination.jndilocation}"/>
+            <param name="_oc4j.admin.failonerror" value="false"/>
+        </antcall>
+    </target>
+
+        <!--
+       ==============================================
+         removes the specified jms connection factory
+       ==============================================
+-->
+    <target name="remove-jms-connectionfactory">
+        <antcall target="_run-oc4j-admin-client">
+            <param name="_oc4j.admin.action" value="-removeJMSConnectionFactory -jndilocation ${oc4j.admin.deploy.jms.connectionfactory.jndilocation}"/>
+            <param name="_oc4j.admin.failonerror" value="false"/>
+        </antcall>
+    </target>
+
+        <!--
+       =========================================
+         removes the specified jms destination
+       =========================================
+-->
+    <target name="remove-jms-destination">
+        <antcall target="_run-oc4j-admin-client">
+            <param name="_oc4j.admin.action" value="-removeDestination -name ${oc4j.admin.deploy.jms.destination.name} -force true"/>
+            <param name="_oc4j.admin.failonerror" value="false"/>
+        </antcall>
+    </target>
+</project>

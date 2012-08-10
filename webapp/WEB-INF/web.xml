@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<web-app xmlns="http://java.sun.com/xml/ns/j2ee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd"
+	version="2.4">
+
+	<welcome-file-list>
+		<welcome-file>index.html</welcome-file>
+	</welcome-file-list>
+
+	<servlet>
+		<servlet-name>UploadServlet</servlet-name>
+		<servlet-class>edu.rpi.UploadServlet</servlet-class>
+	</servlet>
+
+	<servlet-mapping>
+		<servlet-name>UploadServlet</servlet-name>
+		<url-pattern>/UploadServlet</url-pattern>
+	</servlet-mapping>
+
+    <context-param>
+        <description>Driver Class Name</description>
+        <param-name>driverClassName</param-name>
+        <param-value>oracle.jdbc.driver.OracleDriver</param-value>
+    </context-param>
+    <context-param>
+        <description>URL</description>
+        <param-name>url</param-name>
+        <param-value>jdbc:oracle:thin:@vcmr-149.server.rpi.edu:1521:CMMST149</param-value>
+    </context-param>
+    <context-param>
+        <description>User Name</description>
+        <param-name>username</param-name>
+        <param-value> <"USERNAME GOES HERE"> </param-value>
+    </context-param>
+    <context-param>
+        <description>Password</description>
+        <param-name>password</param-name>
+        <param-value>  <"PASSWORD GOES HERE"> </param-value>
+    </context-param>
+    
+</web-app>
