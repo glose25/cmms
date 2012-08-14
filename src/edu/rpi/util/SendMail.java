@@ -10,9 +10,12 @@ import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.log4j.Logger;
 
 public class SendMail {
+    
 
+    private static Logger logger = Logger.getLogger(SendMail.class);
     public static final String MAIL_SERVER = "mail.rpi.edu";
     public static final String USERNAME = "";//"vcmr.rpi.edu";
     public static final String PASSWORD = "";//"password";
@@ -42,9 +45,9 @@ public class SendMail {
             tr.sendMessage(msg, msg.getAllRecipients());
             tr.close();
         } catch (AddressException ex) {
-            System.out.println(ex.getMessage());
+            logger.error(ex.getMessage());            
         } catch (MessagingException ex) {
-            System.out.println(ex.getMessage());
+            logger.error(ex.getMessage());
         }
     }
 }

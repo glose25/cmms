@@ -196,8 +196,10 @@
 		<echo>Created META-INF dir</echo>
 
 		<!-- generate the war file using the contents of the staging area and the web.xml file -->
-		<war basedir="${war.stage.dir}" destfile="${dist.dir}/${war.file}" webxml="${webroot.dir}/WEB-INF/web.xml">
-			<fileset dir="${webroot.dir}/html"/>
+		<war basedir="${war.stage.dir}" destfile="${dist.dir}/${war.file}"> 
+			<!--webxml="${webroot.dir}/WEB-INF/web.xml">-->
+			<fileset dir="${webroot.dir}"/>
+            <fileset dir="${webroot.dir}/html"/>
 		</war>
 
 		<echo>Created War...............</echo>

@@ -20,6 +20,8 @@ import javax.xml.bind.JAXBException;
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 
+import org.apache.log4j.Logger;
+
 import oracle.jdbc.OracleCallableStatement;
 
 import com.sciquest.po.PurchaseOrder;
@@ -38,7 +40,8 @@ public class UploadServlet extends HttpServlet
      * 
      */
     private static final long serialVersionUID = 1L;
-    public static final String version = "12.3";   
+    private static Logger logger = Logger.getLogger(FAMISConnectionHelper.class);
+    public static final String version = "12.6";   
     private FAMISConnectionHelper connAutoCommit;
 
     // This get Method resolves when you try to open the URL of the service
@@ -107,7 +110,8 @@ public class UploadServlet extends HttpServlet
                 pom = POImport.unmarshalPurchaseOrderMsg(poXmlAsSource);
                 poNumber = getPoNumber(pom);
             } catch (JAXBException e) {
-                System.out.println("problem Unmarshalling XML");
+                logger.warn("problem Unmarshalling XML");
+                logger.warn(e);
                 e.printStackTrace();
                 poNumber = "unknown";
                 pom = null;
@@ -136,8 +140,8 @@ public class UploadServlet extends HttpServlet
                     POImport poi = new POImport(connManualCommit);
                     // Reuse the PurchaseOrderMessage from above, because we know
                     // it's not null.
-                    String[] result = poi.parse(pom);
-                    System.out.println("Result from POImport.parse: " + result[0] + " - " + result[1]);
+                    String[] result = poi.parse(pom);                    
+                    logger.debug("Result from POImport.parse: " + result[0] + " - " + result[1]);
                     // The result code is now the result from the parsing routing.            
                     db_response = result[0];
                     responseMessage = result[1];
@@ -150,10 +154,10 @@ public class UploadServlet extends HttpServlet
                 // Since we can't log the XML to the DB, we'll write it to file
                 // and then send a notification email to the programmers.
                 try {
-                    System.out.println("Writing po.xml to disk...");
+                    logger.debug("Writing po.xml to disk...");                    
                     writeFileToDisk(poXMLasString);
                 } catch (IOException e) {
-                    System.out.println("ERROR :: Was not able to write po.xml to disk.");
+                    logger.error("ERROR :: Was not able to write po.xml to disk.");
                 }
                 try {
                     InternetAddress[] toAddresses = {new InternetAddress("glosej@rpi.edu"),
@@ -165,11 +169,12 @@ public class UploadServlet extends HttpServlet
                             "UploadServlet was not able to log the incoming XML from SciQuest to the CMMS database. Please investigate.\n" +
                     "Common causes could be incorrect username, password or url for CMMS database.");
                 } catch (Exception e) {
-                    System.out.println("Wasn't able to send emails... sorry.");
+                    logger.error("Wasn't able to send emails... sorry.");
                 }
             }
         } catch (Exception e) {
-            System.out.println("Unhandled Exception");
+            logger.error("Unhandled Exception");
+            logger.error(e);
             e.printStackTrace();           
             db_response = "500"; // some sort of internal Exception
             responseMessage = "internal server error - unhandled exception";
@@ -180,17 +185,17 @@ public class UploadServlet extends HttpServlet
 
     public String getPoNumber(PurchaseOrderMessage purchaseOrderMsg) {
         String poNumber = "";
-        System.out.println("attempting to get the po number");
+        logger.debug("attempting to get the po number");
         try {
             for (Object ob : purchaseOrderMsg.getExtendedPurchaseOrderOrPurchaseOrderOrResponseMessage()) {
                 if (ob.getClass().equals(PurchaseOrder.class)) {
                     PurchaseOrder po = (PurchaseOrder) ob; 
                     poNumber = po.getPOHeader().getPONumber();
-                    System.out.println("poNumber:"+poNumber);                    
+                    logger.debug("poNumber:"+poNumber);                    
                 }
             }
         } catch (Exception e) {
-            System.out.println("Exception in getPoNumber");
+            logger.error("Exception in getPoNumber");
             e.printStackTrace();
             poNumber = "unknown";
         }
@@ -213,8 +218,9 @@ public class UploadServlet extends HttpServlet
             cstmt.setStringForClob(3, xmlIn);
             cstmt.execute();
         } catch (Exception e) {
-            System.out.println("Error in insert_po_to_db");
-            System.out.println("Could not log XML to database");
+            logger.error("Error in insert_po_to_db");
+            logger.error("Could not log XML to database");
+            logger.error(e);
             e.printStackTrace();
             // If there is any exception, SEND A MESSAGE TO SCIQUEST - 500 MSG
             return "500";

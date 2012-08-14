@@ -7,11 +7,15 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-/**
+import org.apache.log4j.Logger;
+
+ /**
  * @author glosej
  *
  */
 public class FAMISConnectionHelper {
+    
+    private static Logger logger = Logger.getLogger(FAMISConnectionHelper.class);
 	
     private  Connection conn = null;
     private  String driverClassName;
@@ -37,11 +41,13 @@ public class FAMISConnectionHelper {
             //Class.forName("oracle.jdbc.driver.OracleDriver");
             conn = DriverManager.getConnection(getUrl(), getUsername(), getPassword());
             conn.setAutoCommit(true); // Auto commit
-            System.out.println("SETTING AUTO COMMIT TO TRUE");
+            logger.debug("SETTING AUTO COMMIT TO TRUE");
         } catch (ClassNotFoundException e) {
-            System.out.println("could not find the database driver");
+            logger.error("could not find the database driver");
+            logger.error(e);
         } catch (SQLException e) {
             e.printStackTrace();
+            logger.error(e);
         }           
     }
 
@@ -51,11 +57,13 @@ public class FAMISConnectionHelper {
             //Class.forName("oracle.jdbc.driver.OracleDriver");
             conn = DriverManager.getConnection(getUrl(), getUsername(), getPassword());
             conn.setAutoCommit(false); // Must manually set a commit
-            System.out.println("SETTING AUTO COMMIT TO FALSE");
+            logger.debug("SETTING AUTO COMMIT TO FALSE");
         } catch (ClassNotFoundException e) {
-            System.out.println("could not find the database driver");
+            logger.error("could not find the database driver");
+            logger.error(e);
         } catch (SQLException e) {
 			e.printStackTrace();
+			logger.error(e);
 		}   		
    	}
 	

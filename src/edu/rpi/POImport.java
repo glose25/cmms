@@ -12,6 +12,8 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.transform.Source;
 
+import org.apache.log4j.Logger;
+
 import com.sciquest.po.CustomFieldValue;
 import com.sciquest.po.CustomFieldValueSet;
 import com.sciquest.po.POLine;
@@ -28,6 +30,7 @@ public class POImport {
     /**
      * 
      */
+    private static Logger logger = Logger.getLogger(POImport.class);
     private static final String PACKAGE_NAME = "CMMSSCI.PREQ_EXPORT_PO_IMPORT_PKG.";
     private static final String INSERT_PO_DATA = "{ call " + PACKAGE_NAME + "p_insert_temp_po_data(?,?,?,?,?,?,?) }";
     private static final String INSERT_PO_LINE_DATA = "{ call " + PACKAGE_NAME + "p_insert_temp_po_line_data(?,?,?,?,?,?,?,?,?,?) }";
@@ -89,18 +92,20 @@ public class POImport {
                 result[0] = "400";
                 result[1] = "PO Already Processed";
                 // no need to print the full stack trace, just the localized msg
-                System.out.println(e.getErrorCode()); 
-                System.out.println(e.getLocalizedMessage());
+                logger.error(e.getErrorCode()); 
+                logger.error(e.getLocalizedMessage());
             } else {
                 result[0] = "400";
                 result[1] = "Some element error";
                 e.printStackTrace();
+                logger.error(e);
             }                            
         } catch (Exception e) {
-            System.out.println("Some other Exception");
+            logger.error("Some other Exception");
             result[0] = "500";
             result[1] = "server exception";
             e.printStackTrace();
+            logger.error(e);
         }        
         return result;
 
@@ -115,16 +120,16 @@ public class POImport {
      */
     public void getElements(PurchaseOrder po) throws SQLException {
         String requester = po.getPOHeader().getRequestor().getUserProfile().getUsername();
-        System.out.println("requester:" + requester);
+        logger.debug("requester:" + requester);
 
         String buyer = po.getPOHeader().getBuyerInfo().getEmail();
-        System.out.println("buyer:"+buyer);
+        logger.debug("buyer:"+buyer);
 
         String vendorNo = po.getPOHeader().getSupplier().getSupplierNumber();
-        System.out.println("vendorNo:"+vendorNo);
+        logger.debug("vendorNo:"+vendorNo);
 
         String poNumber = po.getPOHeader().getPONumber();
-        System.out.println("poNumber:"+poNumber);
+        logger.debug("poNumber:"+poNumber);
 
         String woNumber = "";
         String commodity = "";
@@ -134,25 +139,25 @@ public class POImport {
             if (customFieldSet.getName().equalsIgnoreCase("FAMIS Work Order No.")) {
                 for (CustomFieldValue customField : customFieldSet.getCustomFieldValue()) {
                     woNumber = customField.getValue();
-                    System.out.println("woNumber:"+woNumber);
+                    logger.debug("woNumber:"+woNumber);
                 }
             }
             if (customFieldSet.getName().equalsIgnoreCase("Commodity Code")) {
                 for (CustomFieldValue customField : customFieldSet.getCustomFieldValue()) {
                     commodity = customField.getValue();
-                    System.out.println("commodity:"+commodity);
+                    logger.debug("commodity:"+commodity);
                 }
             }
             if (customFieldSet.getName().equalsIgnoreCase(
             "External Requisition Number")) {
                 for (CustomFieldValue customField : customFieldSet.getCustomFieldValue()) {
                     preqNo = customField.getValue();
-                    System.out.println("preqNo:"+preqNo);
+                    logger.debug("preqNo:"+preqNo);
                 }
             }
         }
 
-        System.out.println(poNumber);
+        logger.debug(poNumber);
 
         CallableStatement cstmt = null;
         try {
@@ -167,32 +172,32 @@ public class POImport {
             cstmt.execute();
         } catch (SQLException e) {
             conn.rollback();
-            throw e;
+            throw e;            
         }
-        System.out.println("SUCCESS: inserted into TFAMIS_PO");
+        logger.debug("SUCCESS: inserted into TFAMIS_PO");
 
         for (POLine poLine : po.getPOLine()) {
             String lineNo = poLine.getLinenumber();
-            System.out.println("lineNo:"+lineNo);
+            logger.debug("lineNo:"+lineNo);
 
             String description = poLine.getItem().getDescription();
-            System.out.println("description:"+description);
+            logger.debug("description:"+description);
 
             String partNumber = poLine.getItem().getCatalogNumber();
-            System.out.println("partNumber:"+partNumber);
+            logger.debug("partNumber:"+partNumber);
 
             String price = poLine.getLineCharges().getUnitPrice().getMoney().getvalue();
-            System.out.println("price:"+price);
+            logger.debug("price:"+price);
 
             String quantity = poLine.getQuantity();
-            System.out.println("quantity:"+quantity);
+            logger.debug("quantity:"+quantity);
 
             String unitOfMeasure = "";
 
             for (ProductUnitOfMeasure puom : poLine.getItem().getProductUnitOfMeasure()) {
                 if (puom.getType().equalsIgnoreCase("system")) {
                     unitOfMeasure = puom.getMeasurement().getMeasurementUnit();
-                    System.out.println("unitOfMeasure:"+unitOfMeasure);
+                    logger.debug("unitOfMeasure:"+unitOfMeasure);
                 }
             }            
 
@@ -214,7 +219,7 @@ public class POImport {
                 conn.rollback();
                 throw e;
             }
-            System.out.println("SUCCESS: inserted into TFAMIS_POLINE");
+            logger.debug("SUCCESS: inserted into TFAMIS_POLINE");
 
         }
         // We decided NOT to commit at this point and wait until the PO
@@ -228,7 +233,7 @@ public class POImport {
         // from the data in the temp tables. 
         cstmt = null;
         try {
-            System.out.println("BEGIN: Create PO in FAMIS....");
+            logger.debug("BEGIN: Create PO in FAMIS....");
             cstmt = conn.getConn().prepareCall(CREATE_PO);
             cstmt.setString(1, poNumber);
             cstmt.execute();
@@ -239,7 +244,7 @@ public class POImport {
         // Perform a commit here because the FAMIS Purchase Order has been 
         // successfully created with no exceptions.
         conn.commit();
-        System.out.println("END: Created PO in FAMIS....");
+        logger.debug("END: Created PO in FAMIS....");
 
     }
 
