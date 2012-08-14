@@ -28,17 +28,17 @@
 		<antcall target="delete_build" />
 		<antcall target="compile" />
 		<antcall target="war" />
-		<antcall target="ear" />
+		<!-- <antcall target="ear" /> -->
 		<!-- <antcall target="create_jar" /> -->
 		<!--<antcall target="generate_schema" />-->
 	</target>
 
-	<!-- Build & redeploy -->
-	<target name="build_redeploy" description="Build application and redeploy">
+	<!-- Build & redeploy -->   
+<!-- 	<target name="build_redeploy" description="Build application and redeploy">
 		<antcall target="build" />
 		<antcall target="redeploy" />
 	</target>
-	
+ -->	
 	<!-- Delete everything from build and dist dirs -->
 	<target name="delete_build">
 		<delete failonerror="false">
@@ -56,13 +56,13 @@
 	</target>
 
 	<!-- Deploy the application to OC4J -->
-	<target name="deploy" description="Deploy app into OC4J">
+<!-- 	<target name="deploy" description="Deploy app into OC4J">
 		<ant antfile="oc4j-admin-build.xml" dir="${common.buildscript.dir}" target="deploy-app">
 			<property name="oc4j.admin.deploy.file" value="${dist.dir}/${ear.file}" />
 			<property name="oc4j.admin.deploy.name" value="${deployment.name}" />
 			<property name="oc4j.admin.deploy.plan" value="${basedir}/${deployment.plan}" />
 		</ant>
-	</target>
+	</target> -->
 
 <!--
 	<target name="jar_and_copy" depends="create_jar,copy_to_166">
@@ -107,7 +107,7 @@
 -->
 	
 	<!-- password="${user.password}"  -->
-	<target name="copy_to_166">
+<!-- 	<target name="copy_to_166">
 		<echo>=== COPY_TO_166 ===</echo>
         <input 
             message="Enter ${user.name} password for vcmr-166"
@@ -117,10 +117,10 @@
 			todir="${user.name}@vcmr-166.server.rpi.edu:/home/${user.name}/sciquest"
 			password="${vcmr166.pw}"
 			trust="true"/>
-	</target>
+	</target> -->
 
 	<!-- <handler classname="org.apache.tools.ant.input.SecureInputHandler"/> -->
-    <target name="copy_to_146">
+<!--     <target name="copy_to_146">
         <echo>=== COPY_TO_146 ===</echo>
     	<echo message="ant.version = ${ant.version}"/>
     	<echo message="jre.version = ${java.runtime.version}" />
@@ -133,7 +133,7 @@
             todir="${user.name}@vcmr-146.server.rpi.edu:/home/${user.name}/sciquest"
             password="${vcmr146.pw}"	
             trust="true"/>
-    </target>
+    </target> -->
 
 	<!-- Build the .war file -->
 	<target name="war">
@@ -207,34 +207,28 @@
 	</target>
 
 	<!-- Build the .ear file -->
-	<target name="ear">
+<!-- 	<target name="ear">
 		<echo>Building Ear .....</echo>
 		<delete dir="${ear.stage.dir}" />
 		<mkdir dir="${ear.stage.dir}" />
-
-		<!-- Copy the war file to the .ear staging directory-->
 		<copy file="${dist.dir}/${war.file}" todir="${ear.stage.dir}" />
-
-		<!-- Build the .ear -->
 		<ear destfile="${dist.dir}/${ear.file}" appxml="${basedir}/application.xml">
 			<fileset dir="${ear.stage.dir}" includes="*.jar,*.war" />
 		</ear>
-
-
-	</target>
+	</target> -->
 
 	<!-- Redeploy the application, application must have already been deployed using the deploy target -->
-	<target name="redeploy" description="Redeploy the app to OC4J">
+<!-- 	<target name="redeploy" description="Redeploy the app to OC4J">
 		<antcall target="undeploy">
 		</antcall>
 		<antcall target="deploy">
 		</antcall>
-	</target>
+	</target> -->
 
 	<!-- Undeploys the application from OC4J -->
-	<target name="undeploy" description="Undeploy the application from OC4J">
+<!-- 	<target name="undeploy" description="Undeploy the application from OC4J">
 		<ant antfile="oc4j-admin-build.xml" dir="${common.buildscript.dir}" target="undeploy-app">
 			<property name="oc4j.admin.deploy.name" value="${deployment.name}" />
 		</ant>
-	</target>
+	</target> -->
 </project>
