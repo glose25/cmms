@@ -41,7 +41,7 @@ public class UploadServlet extends HttpServlet
      */
     private static final long serialVersionUID = 1L;
     private static Logger logger = Logger.getLogger(FAMISConnectionHelper.class);
-    public static final String version = "12.6";   
+    public static final String version = "12.8";   
     private FAMISConnectionHelper connAutoCommit;
 
     // This get Method resolves when you try to open the URL of the service
